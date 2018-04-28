@@ -1,0 +1,64 @@
+%macro roladata(processo);
+%let m01 = jan;
+%let m02 = feb;
+%let m03 = mar;
+%let m04 = apr;
+%let m05 = may;
+%let m06 = jun;
+%let m07 = jul;
+%let m08 = aug;
+%let m09 = sep;
+%let m10 = oct;
+%let m11 = nov;
+%let m12 = dec;
+%let dataatu = %eval(&ano&mes * 1);
+%let datafim = %eval(&anofim&mesfim * 1);
+%global primeirodia;
+%global ultmes;
+%let primeirodia = 01&&m&mes..&ano;
+
+%if (&dataatu <= &datafim) %then %do;
+*variáveis extras: ;
+     %let an = %sysfunc(substr(&ano,3,2)); *an - ano com 2 digitos;
+     %let DATA_REF = &&m&mes.._&AN;
+     %let ultmes = %eval((%sysfunc(intnx(day,"&primeirodia"d,-1)))); *ultmes - último dia do mês anterior;
+*ultdia - último dia do mês atual;
+     %let auxdia = %sysfunc(intnx(month,"&primeirodia"d,1));
+     %let mesdia = %sysfunc(month(&auxdia));
+     %if &mesdia ne 10 and &mesdia ne 11 and &mesdia ne 12 %then %let mesdia = 0&mesdia;
+     %let anodia = %sysfunc(year(&auxdia));
+     %let auxdia = 01&&m&mesdia..&anodia;
+     %let ultdia = %eval((%sysfunc(intnx(day,"&auxdia"d, -1))));
+*dataant - ano/mês anterior;
+     %let aux = %sysfunc(intnx(month,"&primeirodia"d,-1));
+     %let mesant = %sysfunc(month(&aux));
+     %if &mesant ne 10 and &mesant ne 11 and &mesant ne 12 %then %let mesant = 0&mesant;
+     %let anoant = %sysfunc(year(&aux));
+     %let anant = %sysfunc(substr(&anoant,3,2));
+     %let dataant = &anoant&mesant;
+
+
+*dataant - ano/mês anterior do anterior;
+     %let aux = %sysfunc(intnx(month,"&primeirodia"d,-2));
+     %let mesant2 = %sysfunc(month(&aux));
+     %if &mesant2 ne 10 and &mesant2 ne 11 and &mesant2 ne 12 %then %let mesant2 = 0&mesant2;
+     %let anoant2 = %sysfunc(year(&aux));
+     %let anant2 = %sysfunc(substr(&anoant2,3,2));
+     %let dataant2 = &anoant2&mesant2;
+
+
+*roda processo;
+     %&processo;
+*calcula próximo &ano e &mes;
+     %let aux = %sysfunc(intnx(month,"&primeirodia"d,1));
+     %let mes = %sysfunc(month(&aux));
+     %if &mes ne 10 and &mes ne 11 and &mes ne 12 %then %let mes = 0&mes;
+     %let ano = %sysfunc(year(&aux));
+*recursiva;
+     %roladata(&processo);
+%end;
+%let ano = &anob;
+%let mes = &mesb;
+%mend;
+%let mesb = &mes;
+%let anob = &ano;
